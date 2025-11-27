@@ -95,6 +95,32 @@ export default function TripDetail() {
     preferences: "",
   });
 
+  // 1. 在 TripDetail component 裡面新增這個函式
+  const downloadPDF = async () => {
+    try {
+      // 使用 api 發送請求，這樣會自動帶上 Authorization Header
+      const response = await axios.get(`/api/trips/${trip?.id}/pdf`, {
+        responseType: "blob", // 👈 關鍵：告訴 Axios 回傳的是二進位檔案 (Blob)
+      });
+
+      // 建立一個虛擬的下載連結並點擊它
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      // 設定下載檔名
+      link.setAttribute("download", `${trip?.city}_Itinerary.pdf`);
+      document.body.appendChild(link);
+      link.click();
+
+      // 清理
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download PDF failed:", err);
+      alert("Failed to download PDF");
+    }
+  };
+
   if (!trip) return <div>Loading...</div>;
 
   return (
@@ -125,7 +151,7 @@ export default function TripDetail() {
             Delete Trip
           </button>
           <button
-            onClick={() => window.open(`/api/trips/${trip.id}/pdf`)}
+            onClick={downloadPDF} // 👈 改成呼叫上面的函式
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md ml-3"
           >
             Download PDF
